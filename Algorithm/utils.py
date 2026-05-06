@@ -123,23 +123,29 @@ def run_hough(roi, param2=None, min_r_rat=None, max_r_rat=None, min_dist_rat=Non
         return 0, None
     gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
     h, w = roi.shape[:2]
-    scale = 0.5
+
+    scale = 0.8
+    dp=1.5  #精度分辨率反比，越大检测越快
+    p1=40    #Canny边缘检测阈值 越小边缘越多
+
     # gsmall = gray + scale down
     gsmall = cv2.resize(gray, (max(1, int(w * scale)), max(1, int(h * scale))))
-    gsmall = cv2.GaussianBlur(gsmall, (7, 7), 0)
-    short = min(gsmall.shape[:2])
+    gsmall = cv2.GaussianBlur(gsmall, (5, 5), 0)
+    short = min(gsmall.shape[:2])           #使用缩小数据
     if short < 10:
         return 0, None
     p2 = param2 if param2 is not None else Config.HOUGH_PARAM2
+    #默认值兜底
     _min_r_rat = min_r_rat if min_r_rat is not None else Config.HOUGH_MIN_R_RAT
     _max_r_rat = max_r_rat if max_r_rat is not None else Config.HOUGH_MAX_R_RAT
     _min_dist_rat = min_dist_rat if min_dist_rat is not None else Config.HOUGH_MIN_DIST_RAT
-    min_r = max(3,       int(short * _min_r_rat))
-    max_r = max(min_r + 1, int(short * _max_r_rat))
-    min_dist = max(1,    int(short * _min_dist_rat))
+    #max降噪
+    min_r = max(3,          int(short * _min_r_rat))
+    max_r = max(min_r + 1,  int(short * _max_r_rat))
+    min_dist = max(1,    int(short * _min_dist_rat))    #间距
     circles = cv2.HoughCircles(
-        gsmall, cv2.HOUGH_GRADIENT_ALT, dp=1.5,
-        minDist=min_dist, param1=100, param2=p2,
+        gsmall, cv2.HOUGH_GRADIENT_ALT, dp,
+        minDist=min_dist, param1=p1, param2=p2,
         minRadius=min_r, maxRadius=max_r,
     )
     if circles is None:

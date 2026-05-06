@@ -48,18 +48,21 @@ def main():
     cv2.namedWindow("Hough Test", cv2.WINDOW_NORMAL)
     cv2.resizeWindow("Hough Test", 960, 540)
 
+    cv2.namedWindow("Edges", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("Edges", 480, 360)
+
     cv2.namedWindow("Hough Sliders", cv2.WINDOW_NORMAL)
     cv2.resizeWindow("Hough Sliders", 500, 300)
 
     # ── 霍夫滑块（下限均为 1，防止非正数报错）──
-    cv2.createTrackbar("param2 x100", "Hough Sliders", 85, 100, nothing)   # 0.01~1.0   置信度
-    cv2.createTrackbar("dp x10",      "Hough Sliders", 15, 30, nothing)    # 0.1~3.0    精度分辨率反比，越大检测越快
-    cv2.createTrackbar("param1",      "Hough Sliders", 100, 300, nothing)  # 1~300      Canny边缘检测阈值 越小边缘越多
-    cv2.createTrackbar("Min R",       "Hough Sliders", 5,  200, nothing)   # 1~200
-    cv2.createTrackbar("Max R",       "Hough Sliders", 80, 300, nothing)   # 1~300
-    cv2.createTrackbar("MinDist",     "Hough Sliders", 20, 200, nothing)   # 1~200
-    cv2.createTrackbar("Blur K x2+1", "Hough Sliders", 3,  10,  nothing)   # 1~11 odd
-    cv2.createTrackbar("Scale x10",   "Hough Sliders", 5,  10,  nothing)   # 0.1~1.0
+    cv2.createTrackbar("param2 x100", "Hough Sliders", 35, 100, nothing)   # 0.01~1.0
+    cv2.createTrackbar("dp x10",      "Hough Sliders", 15, 30, nothing)    # 0.1~3.0
+    cv2.createTrackbar("param1",      "Hough Sliders", 40, 300, nothing)   # 1~300
+    cv2.createTrackbar("Min R",       "Hough Sliders", 10, 200, nothing)   # 1~200
+    cv2.createTrackbar("Max R",       "Hough Sliders", 70, 300, nothing)   # 1~300
+    cv2.createTrackbar("MinDist",     "Hough Sliders", 130,200, nothing)   # 1~200
+    cv2.createTrackbar("Blur K x2+1", "Hough Sliders", 2,  10,  nothing)   # 1~11 odd
+    cv2.createTrackbar("Scale x10",   "Hough Sliders", 8,  10,  nothing)   # 0.1~1.0
 
     print("[测试] ESC/q 退出")
 
@@ -122,6 +125,10 @@ def main():
         gsmall = cv2.resize(gray, (max(1, int(w * scale)), max(1, int(h * scale))))
         gsmall = cv2.GaussianBlur(gsmall, (blur_k, blur_k), 0)
 
+        # Canny 边缘（可视化 param1 的效果）
+        edges = cv2.Canny(gsmall, param1 / 2, param1)
+        edges_bgr = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+
         circles = cv2.HoughCircles(
             gsmall, cv2.HOUGH_GRADIENT_ALT, dp=dp,
             minDist=min_dist, param1=param1, param2=param2,
@@ -168,6 +175,7 @@ def main():
 
         cv2.imshow("Hough Test", roi_disp)
         cv2.imshow("Overview", debug_img)
+        cv2.imshow("Edges", edges_bgr)
 
         key = cv2.waitKey(1) & 0xFF
         if key in (27, ord('q')):
