@@ -31,7 +31,7 @@ class DetectorConfig:
     # 定位参数
     hough_param2: float = 0.35
     hough_min_r_rat: float = 0.04      #最小圆半径 (10px@250short)
-    hough_max_r_rat: float = 0.28      #最大圆半径 (70px@250short)
+    hough_max_r_rat: float = 0.7      #最大圆半径 (70px@250short)
     hough_min_dist_rat: float = 0.52   #圆心间距  (130px@250short)
     task_mode: str = "normal"  # "normal" | "ellipse"
 
@@ -58,7 +58,7 @@ RED_PIXEL_MIN = 5000
 
 HOUGH_PARAM2    = 0.35
 HOUGH_MIN_R_RAT = 0.04
-HOUGH_MAX_R_RAT = 0.28
+HOUGH_MAX_R_RAT = 0.7
 HOUGH_MIN_DIST_RAT = 0.52
 
 WARP_SCALE = 1.5
