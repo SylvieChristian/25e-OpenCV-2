@@ -157,7 +157,7 @@ def locate_center(best, frame_h, frame_w, cfg: DetectorConfig):
     x0, y0 = best["x0"], best["y0"]
     bx, by, bw, bh = best["bx"], best["by"], best["bw"], best["bh"]
 
-    center = center_type = corners = circles = None
+    center = center_type = corners = circles = gsmall = None
     circle_count = 0
 
     # 判断轮廓是否贴边（被裁切）
@@ -172,14 +172,14 @@ def locate_center(best, frame_h, frame_w, cfg: DetectorConfig):
                 center_type = "DIAG"
 
     # ── Level 2: 霍夫圆 / 椭圆 ──
-    if clipped:
+    if center is None:
         if cfg.task_mode == "ellipse":
             lc = utils.fit_ellipse_ring(best["roi"], bw, bh)
             if lc is not None:
                 center = (lc[0] + x0, lc[1] + y0)
                 center_type = "ELLI"
         else:
-            circle_count, circles = utils.run_hough(
+            circle_count, circles, gsmall = utils.run_hough(
                 best["roi"],
                 param2=0.6 if clipped else None,
                 min_r_rat=cfg.hough_min_r_rat,
@@ -200,7 +200,7 @@ def locate_center(best, frame_h, frame_w, cfg: DetectorConfig):
             center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
             center_type = "CENT"
 
-    return center, center_type, circle_count, circles, corners
+    return center, center_type, circle_count, circles, corners, gsmall
 
 
 # ====================================================================
@@ -299,6 +299,7 @@ def detect_black_tape_roi(frame, cfg: DetectorConfig):
     candidates, fallback_cnt, _ = extract_candidates(frame, mask, cfg, debug_img)
 
     rois = []
+    gsmall = None
 
     if candidates:
         # 3. 选最优候选（红色密度最高）
@@ -306,7 +307,7 @@ def detect_black_tape_roi(frame, cfg: DetectorConfig):
         fh, fw = frame.shape[:2]
 
         # 4. 三级定位靶心（DIAG → HOUGH/ELLI → CENT）
-        center, center_type, circle_count, circles, corners = locate_center(
+        center, center_type, circle_count, circles, corners, gsmall = locate_center(
             best, fh, fw, cfg
         )
 
@@ -339,4 +340,4 @@ def detect_black_tape_roi(frame, cfg: DetectorConfig):
         cv2.putText(debug_img, "未检测到黑色胶带", (10, 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
-    return rois, debug_img, mask
+    return rois, debug_img, mask, gsmall

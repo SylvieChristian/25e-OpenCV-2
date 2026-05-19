@@ -6,10 +6,11 @@ import numpy as np
 import Drivers.streamer  as  streamer
 from Algorithm.Config import DetectorConfig
 import Algorithm.Process as  process
+from Drivers.SSD1306 import SSD1306_IIC
+from Drivers.OLED_Menu import Menu
 
 #全局变量
 fps_cnt, fps_t, fps_val = 0, time.time(), 0.0
-
 
 #主函数初始化错误处理
 def detect(cap):
@@ -26,10 +27,11 @@ def detect(cap):
     return True
 
 #窗口显示
-def ShowWin(debug_img, red_mask,mask):
+def ShowWin(debug_img, red_mask,mask,gsmall,cfg: DetectorConfig):
     cv2.imshow("ROI Debug", debug_img)
     cv2.imshow("Red Filter", red_mask)
-    cv2.imshow("mask",mask)
+    # cv2.imshow("gsmall", gsmall)
+    # cv2.imshow("mask",mask)
 
 #计算fps+显示
 def fps(frame):
@@ -105,7 +107,6 @@ def update_trackbars(cfg):
 
 
 #标准亮度197
-    
 def main():
     cap= streamer.stream_creat()        #获取摄像头数据流
 
@@ -127,7 +128,7 @@ def main():
             frame = process.preprocess(frame, cfg)
 
             #图像处理 → 返回 (rois, debug_img, mask)
-            rois, debug_img, mask = process.detect_black_tape_roi(frame, cfg)
+            _, debug_img, mask , gsmall = process.detect_black_tape_roi(frame, cfg)
 
             #全帧红色掩码（调试可视化）
             red_mask = process.create_red_mask(frame, cfg)
@@ -137,7 +138,7 @@ def main():
             fps     (debug_img)
 
             #窗口显示
-            ShowWin(debug_img, red_mask,mask)
+            ShowWin(debug_img, red_mask, mask, gsmall, cfg)
 
             #调试key
             key = cv2.waitKey(1) & 0xFF

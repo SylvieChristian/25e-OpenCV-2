@@ -30,9 +30,9 @@ class DetectorConfig:
 
     # 定位参数
     hough_param2: float = 0.35
-    hough_min_r_rat: float = 0.04      #最小圆半径 (10px@250short)
-    hough_max_r_rat: float = 0.7      #最大圆半径 (70px@250short)
-    hough_min_dist_rat: float = 0.52   #圆心间距  (130px@250short)
+    hough_min_r_rat: float = 0.04       #最小圆半径 (10px@250short)
+    hough_max_r_rat: float = 0.7        #最大圆半径 (70px@250short)
+    hough_min_dist_rat: float = 0.52    #圆心间距  (130px@250short)
     task_mode: str = "normal"  # "normal" | "ellipse"
 
     # 视频尺寸
@@ -44,6 +44,9 @@ class DetectorConfig:
     CROP_CY: float = 0.5
     CROP_W:  float = 0.5
     CROP_H:  float = 0.5
+
+    #oled参数
+    
 
 
 # ====================================================================

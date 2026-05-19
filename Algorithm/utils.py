@@ -120,7 +120,7 @@ def run_hough(roi, param2=None, min_r_rat=None, max_r_rat=None, min_dist_rat=Non
     返回 (circle_count, circles)，circles 坐标已映射回原图尺寸。
     """
     if roi is None or roi.size == 0:
-        return 0, None
+        return 0, None, None
     gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
     h, w = roi.shape[:2]
 
@@ -131,9 +131,10 @@ def run_hough(roi, param2=None, min_r_rat=None, max_r_rat=None, min_dist_rat=Non
     # gsmall = gray + scale down
     gsmall = cv2.resize(gray, (max(1, int(w * scale)), max(1, int(h * scale))))
     gsmall = cv2.GaussianBlur(gsmall, (5, 5), 0)
+    
     short = min(gsmall.shape[:2])           #使用缩小数据
     if short < 10:
-        return 0, None
+        return 0, None, None
     p2 = param2 if param2 is not None else Config.HOUGH_PARAM2
     #默认值兜底
     _min_r_rat = min_r_rat if min_r_rat is not None else Config.HOUGH_MIN_R_RAT
@@ -149,11 +150,11 @@ def run_hough(roi, param2=None, min_r_rat=None, max_r_rat=None, min_dist_rat=Non
         minRadius=min_r, maxRadius=max_r,
     )
     if circles is None:
-        return 0, None
+        return 0, None, gsmall
     circles = np.round(circles[0]).astype(int)
     circles[:, :2] = (circles[:, :2] / scale).astype(int)
     circles[:, 2]  = (circles[:, 2]  / scale).astype(int)
-    return len(circles), circles
+    return len(circles), circles, gsmall
 
 
 # ====================================================================
