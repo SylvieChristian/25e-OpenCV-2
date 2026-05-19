@@ -45,8 +45,8 @@ class DetectorConfig:
     CROP_W:  float = 0.5
     CROP_H:  float = 0.5
 
-    #oled参数
-    
+    #OLED
+    i2cDeviceIndex: int = 7
 
 
 # ====================================================================

@@ -1,6 +1,6 @@
-"""
+﻿"""
 SSD1306 OLED (128x64, I2C) 四按键驱动
-show_text / show_lines / set_font 
+show_text / show_lines / set_font
 """
 import os
 
@@ -18,6 +18,13 @@ DEFAULT_FONT_CANDIDATES = [
 
 
 class SSD1306_IIC():
+    """参数匹配
+
+        iicDeviceIndex: I2C设备索引
+        address: i2c地址
+        font_path: 字体路径
+        with_keys: 是否包含按键功能
+    """
     def __init__(self, iicDeviceIndex, address=0x3c, font_path=None, with_keys=False):
         self.IICInterface = smbus.SMBus(iicDeviceIndex)
         self.displayWidth = 128
@@ -33,22 +40,27 @@ class SSD1306_IIC():
             from Drivers.Key import Keys
             self.keys = Keys()
 
+    # 清屏：white=False 全黑，white=True 全白
     def clear(self,white=False):
         for i in range(1024):
             self.framebuffer[i] = 0xff if white else 0x00
         self.updateScreen()
 
+    # 释放资源：关闭按键线程和 I²C 总线
     def close(self):
         if self.keys:
             self.keys.close()
         self.IICInterface.close()
 
+    # 向 SSD1306 发送控制命令字节
     def writeCommand(self,cmd):
         self.IICInterface.write_byte_data(self.address, 0x00, cmd)
 
+    # 向 SSD1306 发送显示数据字节
     def writeData(self,data):
         self.IICInterface.write_byte_data(self.address, 0x40, data)
 
+    # 设置帧缓冲中单个像素 (x,y) 的亮灭，value=1 亮 / 0 灭
     def renderSinglePixel(self,x,y,value):
         if x < 0 or x >= self.displayWidth: return
         elif y < 0 or y >= self.displayHeight: return
@@ -59,6 +71,7 @@ class SSD1306_IIC():
             part &= ~(1<<(y%8))
         self.framebuffer[x + (y // 8) * self.displayWidth] = part
 
+    # 将 Pillow 二值图像渲染到帧缓冲并刷新屏幕
     def renderPillowImage(self, pillowImage):
         assert type(pillowImage) == Image.Image
         assert pillowImage.mode == '1'
@@ -70,6 +83,7 @@ class SSD1306_IIC():
                 # self.renderSinglePixel(x,y, array[y][x])
         self.updateScreen()
 
+    # 将帧缓冲的 8 个页逐列写入 SSD1306 GDDRAM
     def updateScreen(self):
         for i in range(8):
             self.writeCommand(0xb0+i)
@@ -78,6 +92,7 @@ class SSD1306_IIC():
             for j in range(self.displayWidth):
                 self.writeData(self.framebuffer[i*self.displayWidth + j])
 
+    # SSD1306 初始化序列：设置显示模式、扫描方向、对比度等硬件参数
     def initProcess(self):
         self.writeCommand(0xae)
         self.writeCommand(0x20)
@@ -112,6 +127,7 @@ class SSD1306_IIC():
 
     # ====================== 新增便捷方法 ======================
 
+    # 按优先级遍历候选列表，返回第一个存在的字体路径
     @staticmethod
     def _auto_font():
         for p in DEFAULT_FONT_CANDIDATES:
@@ -119,10 +135,12 @@ class SSD1306_IIC():
                 return p
         return None
 
+    # 切换字体文件，清空字体缓存使其重新加载
     def set_font(self, path):
         self._font_path = path
         self._font_cache.clear()
 
+    # 获取指定字号的字体对象，命中缓存则直接返回
     def _font(self, size):
         if size not in self._font_cache:
             if self._font_path:
@@ -131,14 +149,17 @@ class SSD1306_IIC():
                 self._font_cache[size] = ImageFont.load_default()
         return self._font_cache[size]
 
+    # 创建一张全黑二值空白图像，尺寸与屏幕一致
     def _blank_image(self):
         return Image.new('1', (self.displayWidth, self.displayHeight), 0)
 
+    # 在屏幕上显示单行文本，x/y 为起始坐标，size 为字号
     def show_text(self, text, x=0, y=0, size=14):
         img = self._blank_image()
         ImageDraw.Draw(img).text((x, y), str(text), fill=1, font=self._font(size))
         self.renderPillowImage(img)
 
+    # 在屏幕上显示多行文本，支持不同字号，padding 控制行间距
     def show_lines(self, *lines, sizes=None, padding=2, x=0, y=0):
         img = self._blank_image()
         draw = ImageDraw.Draw(img)
@@ -152,5 +173,6 @@ class SSD1306_IIC():
             cur_y += sz + padding
         self.renderPillowImage(img)
 
+    # 阻塞等待按键，可设置超时(ms)，无按键驱动时返回 None
     def wait_key(self, timeout_ms=None):
         return self.keys.get(timeout_ms) if self.keys else None
