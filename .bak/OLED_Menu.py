@@ -1,13 +1,12 @@
-"""OLED 通用菜单 — 按键导航 + 实时显示 + 参数编辑
+﻿"""OLED 通用菜单 — 按键导航 + 实时显示 + 参数编辑
 item = dict:
     name:    str            显示名
     get:     callable()     读当前值；只读项只给 get
     set:     callable(v)    写新值；与 range/choices 配对
     range:   (min,max,step) 数值编辑
     choices: list           选项编辑
-    toggle:  bool           True 时 # 直接在 choices 间循环切换，不进入编辑模式
     action:  callable()     触发型（不带 get/set）
-按键：^v 浏览或调值，# 进入/退出编辑或触发动作或 toggle，* 取消编辑
+按键：^v 浏览或调值，# 进入/退出编辑或触发动作，* 取消编辑
 """
 
 class Menu:
@@ -61,11 +60,7 @@ class Menu:
         elif k == 'v':
             self.cur = (self.cur + 1) % len(self.items)
         elif k == '#':
-            if it.get('toggle') and 'choices' in it:              # toggle：在 choices 间直接循环切换，不进入编辑模式
-                ch = it['choices']; v = it['get']()
-                i = ch.index(v) if v in ch else 0
-                it['set'](ch[(i + 1) % len(ch)])
-            elif 'action' in it:
+            if 'action' in it:
                 it['action']()                                    # 触发动作项
             elif 'set' in it:
                 self.edit = True                                  # 进入编辑模式
@@ -83,7 +78,7 @@ class Menu:
             return '{:.2f}'.format(v)
         return str(v)
 
-    # 绘制可见窗口：逐行拼装 "标记 名称:值"，调 show_lines_styled 渲染（只读项反色显示以区分状态参数）
+    # 绘制可见窗口：逐行拼装 "标记 名称:值"，调 show_lines 渲染到屏幕
     def _draw(self):
         lines = []
         end = min(self.top + self.visible, len(self.items))
@@ -95,7 +90,5 @@ class Menu:
                 line = '{}{}:{}'.format(mark, it['name'], self._fmt(it['get']()))
             else:
                 line = '{}{}'.format(mark, it['name'])
-            # 只读项（只有 get，没有 set 也没有 action）反色，与可调项视觉区分
-            is_readonly = ('get' in it) and ('set' not in it) and ('action' not in it)
-            lines.append((line, is_readonly))
-        self.oled.show_lines_styled(lines, sizes=self.size, padding=2)
+            lines.append(line)
+        self.oled.show_lines(*lines, sizes=self.size, padding=2)

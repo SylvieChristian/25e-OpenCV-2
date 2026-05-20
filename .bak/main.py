@@ -109,7 +109,7 @@ def menu_loop(cfg):
                          'range': (0.0, 1.0, 0.05)},
         {'name': 'CLAHE','get': lambda: cfg.use_clahe,
                          'set': lambda v: setattr(cfg, 'use_clahe', v),
-                         'choices': [False, True], 'toggle': True},
+                         'choices': [False, True]},
         {'name': '<RedPixel>', 'get': lambda: cfg.red_pixel_min,
                          'set': lambda v: setattr(cfg, 'red_pixel_min', v),
                          'range': (0, 800, 10)

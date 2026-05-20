@@ -1,5 +1,4 @@
 from datetime import timedelta
-from collections import deque
 
 import gpiod
 from gpiod.line import Bias, Direction, Edge
@@ -28,19 +27,12 @@ class Keys:
             chip, consumer='keys',
             config={k: s for k in self.key_map},
         )
-        # 事件缓冲：read_edge_events 单次可能返回多个事件，全部入队避免丢失
-        self._buf = deque()
 
     def get(self, timeout_ms=None):
-        if self._buf:
-            return self._buf.popleft()
         td = None if timeout_ms is None else timedelta(milliseconds=timeout_ms)
         if self._req.wait_edge_events(timeout=td):
-            for ev in self._req.read_edge_events():
-                k = self.key_map.get(ev.line_offset)
-                if k is not None:
-                    self._buf.append(k)
-            return self._buf.popleft() if self._buf else None
+            ev = self._req.read_edge_events()[0]
+            return self.key_map.get(ev.line_offset)
         return None
 
     def close(self):

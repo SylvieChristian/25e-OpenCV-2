@@ -95,6 +95,7 @@ def create_usb_stream(
     height=720,                     # 高度
     fps=160,                        # 帧率
     fourcc='MJPG',                  # 编码格式: 'MJPG', 'YUYV', 'H264'
+    
     buffer_size=1,                  # 缓冲区大小（减少延迟）
     # 图像参数（如果摄像头支持）
     brightness=128,                 # 亮度 0-255

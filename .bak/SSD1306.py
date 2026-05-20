@@ -176,28 +176,3 @@ class SSD1306_IIC():
     # 阻塞等待按键，可设置超时(ms)，无按键驱动时返回 None
     def wait_key(self, timeout_ms=None):
         return self.keys.get(timeout_ms) if self.keys else None
-
-    # 多行显示，支持每行单独反色（白底黑字），用于在菜单中区分只读项与可调项
-    def show_lines_styled(self, lines, sizes=None, padding=2, x=0, y=0):
-        """
-        lines: list of (text, invert)
-            invert=True 时该行反色渲染（白底黑字），用于标识只读/状态项
-        """
-        img = self._blank_image()
-        draw = ImageDraw.Draw(img)
-        if sizes is None:
-            sizes = [14] * len(lines)
-        elif isinstance(sizes, int):
-            sizes = [sizes] * len(lines)
-        cur_y = y
-        for (text, invert), sz in zip(lines, sizes):
-            font = self._font(sz)
-            if invert:
-                # 用 textbbox 测实际渲染范围，反色块刚好包文字，避免吃下方行间距
-                bbox = draw.textbbox((x, cur_y), str(text), font=font)
-                draw.rectangle((x, bbox[1], self.displayWidth - 1, bbox[3]), fill=1)
-                draw.text((x, cur_y), str(text), fill=0, font=font)
-            else:
-                draw.text((x, cur_y), str(text), fill=1, font=font)
-            cur_y += sz + padding
-        self.renderPillowImage(img)
